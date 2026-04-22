@@ -4,6 +4,11 @@ import os
 from generador_registro_word import generar_informes_registro
 import shutil
 import zipfile
+
+# Ejemplo de uso: doc = Document()
+
+# --- Imports para openpyxl ---
+import openpyxl
 # =====================================================
 # CONFIGURACIÓN GENERAL
 # =====================================================

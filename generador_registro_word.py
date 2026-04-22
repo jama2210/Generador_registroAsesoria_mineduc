@@ -1,4 +1,7 @@
 from docx import Document
+from docx.shared import Cm, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import os
 import os
 import pandas as pd
 import re
