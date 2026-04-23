@@ -193,11 +193,14 @@ if st.button("📄 Generar Informes de Registro"):
     # Crear ZIP
     zip_nombre = "Informes_Registro_Asesoria.zip"
 
+    
     with zipfile.ZipFile(zip_nombre, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(carpeta_salida):
             for file in files:
-                ruta = os.path.join(root, file)
-                zipf.write(ruta, file)
+                ruta_completa = os.path.join(root, file)
+                ruta_en_zip = os.path.relpath(ruta_completa, carpeta_salida)
+                zipf.write(ruta_completa, ruta_en_zip)
+
 
     st.success("✅ Informes generados correctamente")
 
