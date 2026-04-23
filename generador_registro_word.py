@@ -1,7 +1,4 @@
 from docx import Document
-from docx.shared import Cm, Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-import os
 import os
 import pandas as pd
 import re
@@ -186,6 +183,14 @@ def generar_informes_registro(df_registros, df_planificacion,
         ["INDIQUE SU REGIÓN", "Deprov", "Modalidad Asesoría", "Nombre Asesoría"]
     )
 
+    # Mapa institucional de modalidades
+    modalidad_mapa = {
+        "Directa EE": "Directa a Establecimientos",
+        "Directa a Sostenedor": "Directa a Sostenedor",
+        "Red EE": "Red de Establecimientos",
+        "Red de Sostenedor": "Red de Sostenedor"
+    }
+
     for (region, deprov, modalidad, nombre), datos in grupos:
 
         region = normalizar_texto(region)
@@ -199,13 +204,35 @@ def generar_informes_registro(df_registros, df_planificacion,
 
         doc = Document(plantilla)
 
+        # Secciones del informe
         agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
         agregar_antecedentes_generales(doc, datos)
         agregar_eid_capacidades_practicas(doc, datos)
         agregar_otras_indicaciones(doc, datos)
 
+        # -------------------------------------------------
+        # ESTRUCTURA DE CARPETAS
+        # Región / DEPROV / Modalidad
+        # -------------------------------------------------
+        carpeta_region = limpiar_nombre_archivo(region)
+        carpeta_deprov = limpiar_nombre_archivo(deprov)
+        carpeta_modalidad = modalidad_mapa.get(modalidad, limpiar_nombre_archivo(modalidad))
+
+        ruta_final = os.path.join(
+            carpeta_salida,
+            carpeta_region,
+            carpeta_deprov,
+            carpeta_modalidad
+        )
+
+        os.makedirs(ruta_final, exist_ok=True)
+
+        # -------------------------------------------------
+        # GUARDAR ARCHIVO
+        # -------------------------------------------------
         archivo = limpiar_nombre_archivo(
             f"Informe_Registro_{region}_{deprov}_{modalidad}_{nombre}.docx"
         )
 
-        doc.save(os.path.join(carpeta_salida, archivo))
+        doc.save(os.path.join(ruta_final, archivo))
+``
