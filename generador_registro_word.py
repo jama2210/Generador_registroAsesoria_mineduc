@@ -179,17 +179,16 @@ def generar_informes_registro(df_registros, df_planificacion,
 
     os.makedirs(carpeta_salida, exist_ok=True)
 
-    grupos = df_registros.groupby(
-        ["INDIQUE SU REGIÓN", "Deprov", "Modalidad Asesoría", "Nombre Asesoría"]
-    )
-
-    # Mapa institucional de modalidades
     modalidad_mapa = {
         "Directa EE": "Directa a Establecimientos",
         "Directa a Sostenedor": "Directa a Sostenedor",
         "Red EE": "Red de Establecimientos",
         "Red de Sostenedor": "Red de Sostenedor"
     }
+
+    grupos = df_registros.groupby(
+        ["INDIQUE SU REGIÓN", "Deprov", "Modalidad Asesoría", "Nombre Asesoría"]
+    )
 
     for (region, deprov, modalidad, nombre), datos in grupos:
 
@@ -204,16 +203,11 @@ def generar_informes_registro(df_registros, df_planificacion,
 
         doc = Document(plantilla)
 
-        # Secciones del informe
         agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
         agregar_antecedentes_generales(doc, datos)
         agregar_eid_capacidades_practicas(doc, datos)
         agregar_otras_indicaciones(doc, datos)
 
-        # -------------------------------------------------
-        # ESTRUCTURA DE CARPETAS
-        # Región / DEPROV / Modalidad
-        # -------------------------------------------------
         carpeta_region = limpiar_nombre_archivo(region)
         carpeta_deprov = limpiar_nombre_archivo(deprov)
         carpeta_modalidad = modalidad_mapa.get(modalidad, limpiar_nombre_archivo(modalidad))
@@ -227,12 +221,8 @@ def generar_informes_registro(df_registros, df_planificacion,
 
         os.makedirs(ruta_final, exist_ok=True)
 
-        # -------------------------------------------------
-        # GUARDAR ARCHIVO
-        # -------------------------------------------------
         archivo = limpiar_nombre_archivo(
             f"Informe_Registro_{region}_{deprov}_{modalidad}_{nombre}.docx"
         )
 
         doc.save(os.path.join(ruta_final, archivo))
-``
