@@ -5,11 +5,14 @@ import re
 
 def limpiar_documento(doc):
     """
-    Elimina todo el contenido previo del documento Word
-    (tablas y párrafos), manteniendo estilos de la plantilla.
+    Limpia el contenido del documento Word (párrafos y tablas),
+    pero conserva la sección para evitar errores de python-docx.
     """
     body = doc._element.body
     for element in list(body):
+        # Mantener la definición de sección (<w:sectPr>)
+        if element.tag.endswith('sectPr'):
+            continue
         body.remove(element)
 
 # =====================================================
