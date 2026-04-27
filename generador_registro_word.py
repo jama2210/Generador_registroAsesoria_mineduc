@@ -3,6 +3,14 @@ import os
 import pandas as pd
 import re
 
+def limpiar_documento(doc):
+    """
+    Elimina todo el contenido previo del documento Word
+    (tablas y párrafos), manteniendo estilos de la plantilla.
+    """
+    body = doc._element.body
+    for element in list(body):
+        body.remove(element)
 
 # =====================================================
 # UTILIDADES
@@ -202,6 +210,7 @@ def generar_informes_registro(df_registros, df_planificacion,
         )
 
         doc = Document(plantilla)
+        limpiar_documento(doc)
 
         agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
         agregar_antecedentes_generales(doc, datos)
