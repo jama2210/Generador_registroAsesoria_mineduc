@@ -6,6 +6,20 @@ import re
 from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+from docx.oxml import OxmlElement, ns
+
+def aplicar_color_fondo(celda, color_hex="D9E1F2"):
+    """
+    Aplica color de fondo a una celda de tabla Word.
+    """
+    tc_pr = celda._tc.get_or_add_tcPr()
+    shd = OxmlElement('w:shd')
+    shd.set(ns.qn('w:val'), 'clear')
+    shd.set(ns.qn('w:color'), 'auto')
+    shd.set(ns.qn('w:fill'), color_hex)
+    tc_pr.append(shd)
+
+
 def agregar_titulo_y_logo(doc, ruta_logo="logo_mineduc.png"):
     """
     Agrega el logo institucional y el título del informe
@@ -57,10 +71,9 @@ def valor_visible(valor):
     if pd.isna(valor):
         return ""
     texto = str(valor).strip()
-    if texto.lower() in ["", "no", "n/a", "no aplica"]:
+    if texto == "":
         return ""
     return texto
-
 
 def limpiar_nombre_archivo(nombre):
     return re.sub(r'[\\/*?:"<>|]', "", str(nombre)).strip()
@@ -127,8 +140,11 @@ def agregar_antecedentes_generales(doc, datos):
         "Participantes", "Objetivo de la sesión"
     ]
 
+    
     for i, h in enumerate(encabezados):
-        tabla.rows[0].cells[i].text = h
+        celda = tabla.rows[0].cells[i]
+        celda.text = h
+        aplicar_color_fondo(celda)
 
     datos = datos.sort_values("NUM SESIÓN")
 
@@ -250,7 +266,6 @@ def generar_informes_registro(df_registros, df_planificacion,
         # Contenido del informe
         agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
 
-        agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
         agregar_antecedentes_generales(doc, datos)
         agregar_eid_capacidades_practicas(doc, datos)
         agregar_otras_indicaciones(doc, datos)
