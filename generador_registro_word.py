@@ -15,7 +15,7 @@ def agregar_titulo_y_logo(doc, ruta_logo="logo_mineduc.png"):
     # Logo
     if os.path.exists(ruta_logo):
         p_logo = doc.add_paragraph()
-        p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.LEFT
         run_logo = p_logo.add_run()
         run_logo.add_picture(ruta_logo, width=Cm(4))
 
