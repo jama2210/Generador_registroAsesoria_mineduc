@@ -3,6 +3,35 @@ import os
 import pandas as pd
 import re
 
+from docx.shared import Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+def agregar_titulo_y_logo(doc, ruta_logo="logo_mineduc.png"):
+    """
+    Agrega el logo institucional y el título del informe
+    al inicio del documento.
+    """
+
+    # Logo
+    if os.path.exists(ruta_logo):
+        p_logo = doc.add_paragraph()
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run_logo = p_logo.add_run()
+        run_logo.add_picture(ruta_logo, width=Cm(4))
+
+    # Espacio
+    doc.add_paragraph("")
+
+    # Título
+    titulo = doc.add_heading(
+        "Informe Individual de Registro de Asesoría MINEDUC",
+        level=0
+    )
+    titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # Separación visual
+    doc.add_paragraph("")
+
 def limpiar_documento(doc):
     """
     Limpia el contenido del documento Word (párrafos y tablas),
@@ -214,6 +243,12 @@ def generar_informes_registro(df_registros, df_planificacion,
 
         doc = Document(plantilla)
         limpiar_documento(doc)
+        
+        # Título institucional y logo
+        agregar_titulo_y_logo(doc)
+        
+        # Contenido del informe
+        agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
 
         agregar_encabezado(doc, region, deprov, modalidad, nombre, obj_est, obj_anual)
         agregar_antecedentes_generales(doc, datos)
