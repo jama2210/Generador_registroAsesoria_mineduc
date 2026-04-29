@@ -8,21 +8,6 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
-# Normalizar nombres de columnas del registro
-df_registros.columns = (
-    df_registros.columns
-    .astype(str)
-    .str.strip()
-    .str.replace('\u00a0', ' ')   # espacios duros
-)
-
-df_planificacion.columns = (
-    df_planificacion.columns
-    .astype(str)
-    .str.strip()
-    .str.replace('\u00a0', ' ')
-)
-
 def aplicar_color_fondo(celda, color_hex="D9E1F2"):
     """
     Aplica color de fondo a una celda de tabla Word.
@@ -253,6 +238,21 @@ def agregar_otras_indicaciones(doc, datos):
 # =====================================================
 def generar_informes_registro(df_registros, df_planificacion,
                               carpeta_salida, plantilla="plantilla_registro.docx"):
+
+        # Normalizar nombres de columnas del registro
+    df_registros.columns = (
+        df_registros.columns
+        .astype(str)
+        .str.strip()
+        .str.replace('\u00a0', ' ')   # espacios duros
+    )
+    
+    df_planificacion.columns = (
+        df_planificacion.columns
+        .astype(str)
+        .str.strip()
+        .str.replace('\u00a0', ' ')
+    )
 
     os.makedirs(carpeta_salida, exist_ok=True)
 
