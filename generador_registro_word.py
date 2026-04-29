@@ -8,6 +8,21 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+# Normalizar nombres de columnas del registro
+df_registros.columns = (
+    df_registros.columns
+    .astype(str)
+    .str.strip()
+    .str.replace('\u00a0', ' ')   # espacios duros
+)
+
+df_planificacion.columns = (
+    df_planificacion.columns
+    .astype(str)
+    .str.strip()
+    .str.replace('\u00a0', ' ')
+)
+
 def aplicar_color_fondo(celda, color_hex="D9E1F2"):
     """
     Aplica color de fondo a una celda de tabla Word.
@@ -152,9 +167,15 @@ def agregar_antecedentes_generales(doc, datos):
         r = tabla.add_row().cells
         r[0].text = str(fila.get("NUM SESIÓN", ""))
         r[1].text = valor_visible(fila.get("Supervisor"))
-        r[2].text = valor_visible(fila.get("Fecha de la reunión"))
-        r[3].text = valor_visible(fila.get("Indique hora aproximada de inicio de la reunión"))
-        r[4].text = valor_visible(fila.get("Indique hora aproximada de término de la reunión"))
+        r[2].text = valor_visible(fila.get("Fecha de la reunión"))       
+        r[3].text = valor_visible(
+            fila.get("Indique hora aproximada de inicio de la reunión")
+            or fila.get("Hora de inicio")
+        )
+        r[4].text = valor_visible(
+            fila.get("Indique hora aproximada de término de la reunión")
+            or fila.get("Hora de finalización")
+        )
         r[5].text = valor_visible(fila.get("Tipo de encuentro"))
         r[6].text = valor_visible(fila.get("Participantes de la reunión"))
         r[7].text = valor_visible(fila.get("Objetivo de la sesión de asesoría"))
