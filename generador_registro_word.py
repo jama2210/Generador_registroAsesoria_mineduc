@@ -169,35 +169,41 @@ def agregar_antecedentes_generales(doc, datos):
 def agregar_eid_capacidades_practicas(doc, datos):
 
     columnas = [
-        "Estándares Indicativos de Desempeño asociado",
-        "Capacidad abordada en la sesión de asesoría",
-        "Dimensión asociada al EID seleccionado",
-        "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."
+        ("N° de sesión", "NUM SESIÓN"),
+        ("Estándares Indicativos de Desempeño asociado", "Estándares Indicativos de Desempeño asociado"),
+        ("Capacidad abordada en la sesión de asesoría", "Capacidad abordada en la sesión de asesoría"),
+        ("Dimensión asociada al EID seleccionado", "Dimensión asociada al EID seleccionado"),
+        ("Sub dimensión asociada a la dimensión seleccionada", "Sub dimensión asociada a la dimensión seleccionada"),
+        ("Estándar asociado a la sub dimensión seleccionada", "Estándar asociado a la sub dimensión seleccionada"),
+        ("Práctica abordada", "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
+        ("2da Capacidad", "Capacidad (2) abordada en la sesión de asesoría"),
     ]
 
-    if not any(datos[c].notna().any() for c in columnas if c in datos.columns):
+    # Verificar si hay datos reales
+    if not any(
+        col in datos.columns and datos[col].notna().any()
+        for _, col in columnas if col != "NUM SESIÓN"
+    ):
         return
 
-    doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS", level=1)
+    doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (1)", level=1)
 
-    tabla = doc.add_table(rows=1, cols=2)
+    tabla = doc.add_table(rows=1, cols=len(columnas))
     tabla.style = "Table Grid"
 
-    tabla.rows[0].cells[0].text = "N° de sesión"
-    tabla.rows[0].cells[1].text = "Detalle"
+    # Encabezados con color
+    for i, (titulo, _) in enumerate(columnas):
+        celda = tabla.rows[0].cells[i]
+        celda.text = titulo
+        aplicar_color_fondo(celda)
 
+    # Filas
     for _, fila in datos.iterrows():
+
         r = tabla.add_row().cells
-        r[0].text = str(fila.get("NUM SESIÓN", ""))
 
-        partes = []
-        for c in columnas:
-            texto = valor_visible(fila.get(c))
-            if texto:
-                partes.append(texto)
-
-        r[1].text = "\n".join(partes)
-
+        for i, (_, col) in enumerate(columnas):
+            r[i].text = valor_visible(fila.get(col))
 
 def agregar_otras_indicaciones(doc, datos):
 
