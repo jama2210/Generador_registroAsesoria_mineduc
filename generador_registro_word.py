@@ -70,9 +70,17 @@ def normalizar_texto(valor):
 def valor_visible(valor):
     if pd.isna(valor):
         return ""
-    texto = str(valor).strip()
-    if texto == "":
+
+    # Convertir a string SIN strip agresivo
+    texto = str(valor)
+
+    # Reemplazar caracteres invisibles comunes
+    texto = texto.replace('\r\n', '\n').replace('\r', '\n')
+
+    # Si sigue siendo sólo espacios o saltos, lo tratamos como vacío
+    if texto.strip() == "":
         return ""
+
     return texto
 
 def limpiar_nombre_archivo(nombre):
