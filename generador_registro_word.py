@@ -213,7 +213,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
             r[i].text = valor_visible(fila.get(col))
 
 
-ef agregar_otras_indicaciones(doc, datos):
+def agregar_otras_indicaciones(doc, datos):
 
     columnas = [
         ("Estrategia / acciones de acompañamiento realizadas",
