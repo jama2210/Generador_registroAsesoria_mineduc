@@ -233,14 +233,14 @@ def agregar_otras_indicaciones(doc, datos):
         (
             "Cambios o progresos evidenciados",
             [
-                "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian",
-                "¿Se evidencian cambios o progresos en relación a la práctica abordada?",
+                "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian",
+                "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian",
             ],
         ),
         (
             "Dificultades identificadas",
             [
-                "¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?",
+                "¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?",
             ],
         ),
         (
