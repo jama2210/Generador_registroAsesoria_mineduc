@@ -168,6 +168,7 @@ def agregar_antecedentes_generales(doc, datos):
 
 def agregar_eid_capacidades_practicas(doc, datos):
 
+    
     columnas = [
         ("N° de sesión", "NUM SESIÓN"),
         ("Estándares Indicativos de Desempeño asociado",
@@ -184,8 +185,6 @@ def agregar_eid_capacidades_practicas(doc, datos):
          "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
         ("¿Se trabajó una segunda capacidad o estándar?",
          "¿Se trabajó una segunda capacidad o estándar en su sesión de asesoría?"),
-        ("Capacidad (2) abordada",
-         "Capacidad (2) abordada en la sesión de asesoría"),
     ]
 
     # Verificar si existe información real
@@ -213,26 +212,68 @@ def agregar_eid_capacidades_practicas(doc, datos):
             r[i].text = valor_visible(fila.get(col))
 
 
+
 def agregar_otras_indicaciones(doc, datos):
 
+    # Alias de columnas (Word -> posibles nombres en Excel)
     columnas = [
-        ("Estrategia / acciones de acompañamiento realizadas",
-         "Estrategia /acciones de acompañamiento realizadas"),
-        ("Tema no planificado y cómo fue abordado",
-         "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red. ¿Cómo fue abordado?"),
-        ("Cambios o progresos evidenciados",
-         "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian"),
-        ("Dificultades identificadas",
-         "¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?"),
-        ("Acuerdos concretos de la reunión",
-         "Acuerdos concretos de la reunión"),
-        ("Próximos pasos y responsables",
-         "Próximos pasos que se realizarán antes de la próxima sesión y responsables de cada acción"),
-        ("Comentarios u observaciones",
-         "Comentarios u observaciones"),
+        (
+            "Estrategia / acciones de acompañamiento realizadas",
+            [
+                "Estrategia /acciones de acompañamiento realizadas",
+            ],
+        ),
+        (
+            "Tema no planificado y cómo fue abordado",
+            [
+                "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red. ¿Cómo fue abordado?",
+                "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red.  ¿Cómo fue abordado?",
+            ],
+        ),
+        (
+            "Cambios o progresos evidenciados",
+            [
+                "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian",
+                "¿Se evidencian cambios o progresos en relación a la práctica abordada?",
+            ],
+        ),
+        (
+            "Dificultades identificadas",
+            [
+                "¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?",
+            ],
+        ),
+        (
+            "Acuerdos concretos de la reunión",
+            [
+                "Acuerdos concretos de la reunión",
+            ],
+        ),
+        (
+            "Próximos pasos y responsables",
+            [
+                "Próximos pasos que se realizarán antes de la próxima sesión y responsables de cada acción",
+            ],
+        ),
+        (
+            "Comentarios u observaciones",
+            [
+                "Comentarios u observaciones",
+            ],
+        ),
     ]
 
-    if not any(datos[c].notna().any() for _, c in columnas if c in datos.columns):
+    # Ver si existe al menos un dato real
+    existe_info = False
+    for _, posibles in columnas:
+        for col in posibles:
+            if col in datos.columns and datos[col].notna().any():
+                existe_info = True
+                break
+        if existe_info:
+            break
+
+    if not existe_info:
         return
 
     doc.add_heading("OTRAS INDICACIONES", level=1)
@@ -254,8 +295,15 @@ def agregar_otras_indicaciones(doc, datos):
         r = tabla.add_row().cells
         r[0].text = str(fila.get("NUM SESIÓN", ""))
 
-        for i, (_, col) in enumerate(columnas):
-            r[i + 1].text = valor_visible(fila.get(col))
+        for i, (_, posibles) in enumerate(columnas):
+            valor = ""
+            for col in posibles:
+                if col in datos.columns:
+                    texto = valor_visible(fila.get(col))
+                    if texto:
+                        valor = texto
+                        break
+            r[i + 1].text = valor
 
 # =====================================================
 # FUNCIÓN PRINCIPAL
