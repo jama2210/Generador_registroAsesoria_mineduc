@@ -170,16 +170,25 @@ def agregar_eid_capacidades_practicas(doc, datos):
 
     columnas = [
         ("N° de sesión", "NUM SESIÓN"),
-        ("Estándares Indicativos de Desempeño asociado", "Estándares Indicativos de Desempeño asociado"),
-        ("Capacidad abordada en la sesión de asesoría", "Capacidad abordada en la sesión de asesoría"),
-        ("Dimensión asociada al EID seleccionado", "Dimensión asociada al EID seleccionado"),
-        ("Sub dimensión asociada a la dimensión seleccionada", "Sub dimensión asociada a la dimensión seleccionada"),
-        ("Estándar asociado a la sub dimensión seleccionada", "Estándar asociado a la sub dimensión seleccionada"),
-        ("Práctica abordada", "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
-        ("2da Capacidad", "Capacidad (2) abordada en la sesión de asesoría"),
+        ("Estándares Indicativos de Desempeño asociado",
+         "Estándares Indicativos de Desempeño asociado"),
+        ("Capacidad abordada en la sesión de asesoría",
+         "Capacidad abordada en la sesión de asesoría"),
+        ("Dimensión asociada al EID seleccionado",
+         "Dimensión asociada al EID seleccionado"),
+        ("Sub dimensión asociada a la dimensión de Liderazgo",
+         "Sub dimensión asociada a la dimensión de Liderazgo"),
+        ("Estándar asociado a la sub dimensión Planificación y Gestión de Resultados",
+         "Estándar asociado a la sub dimensión Planificación y Gestión de Resultados"),
+        ("Práctica abordada",
+         "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
+        ("¿Se trabajó una segunda capacidad o estándar?",
+         "¿Se trabajó una segunda capacidad o estándar en su sesión de asesoría?"),
+        ("Capacidad (2) abordada",
+         "Capacidad (2) abordada en la sesión de asesoría"),
     ]
 
-    # Verificar si hay datos reales
+    # Verificar si existe información real
     if not any(
         col in datos.columns and datos[col].notna().any()
         for _, col in columnas if col != "NUM SESIÓN"
@@ -191,7 +200,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
     tabla = doc.add_table(rows=1, cols=len(columnas))
     tabla.style = "Table Grid"
 
-    # Encabezados con color
+    # Encabezados
     for i, (titulo, _) in enumerate(columnas):
         celda = tabla.rows[0].cells[i]
         celda.text = titulo
@@ -199,27 +208,31 @@ def agregar_eid_capacidades_practicas(doc, datos):
 
     # Filas
     for _, fila in datos.iterrows():
-
         r = tabla.add_row().cells
-
         for i, (_, col) in enumerate(columnas):
             r[i].text = valor_visible(fila.get(col))
 
-def agregar_otras_indicaciones(doc, datos):
+
+ef agregar_otras_indicaciones(doc, datos):
 
     columnas = [
-        ("Estrategia /acciones de acompañamiento realizadas", "Estrategia / acciones"),
-        ("Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red.",
-         "Tema no planificado"),
-        ("¿Se evidencian cambios o progresos en relación a la práctica abordada?", "Cambios evidenciados"),
-        ("¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?", "Dificultades"),
-        ("Acuerdos concretos de la reunión", "Acuerdos"),
-        ("Próximos pasos que se realizarán antes de la próxima sesión y responsables de cada acción",
-         "Próximos pasos"),
-        ("Comentarios u observaciones", "Comentarios")
+        ("Estrategia / acciones de acompañamiento realizadas",
+         "Estrategia /acciones de acompañamiento realizadas"),
+        ("Tema no planificado y cómo fue abordado",
+         "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red. ¿Cómo fue abordado?"),
+        ("Cambios o progresos evidenciados",
+         "¿Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian"),
+        ("Dificultades identificadas",
+         "¿Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?"),
+        ("Acuerdos concretos de la reunión",
+         "Acuerdos concretos de la reunión"),
+        ("Próximos pasos y responsables",
+         "Próximos pasos que se realizarán antes de la próxima sesión y responsables de cada acción"),
+        ("Comentarios u observaciones",
+         "Comentarios u observaciones"),
     ]
 
-    if not any(datos[c].notna().any() for c, _ in columnas if c in datos.columns):
+    if not any(datos[c].notna().any() for _, c in columnas if c in datos.columns):
         return
 
     doc.add_heading("OTRAS INDICACIONES", level=1)
@@ -227,17 +240,22 @@ def agregar_otras_indicaciones(doc, datos):
     tabla = doc.add_table(rows=1, cols=len(columnas) + 1)
     tabla.style = "Table Grid"
 
+    # Encabezados
     tabla.rows[0].cells[0].text = "N° sesión"
-    for i, (_, titulo) in enumerate(columnas):
-        tabla.rows[0].cells[i + 1].text = titulo
+    aplicar_color_fondo(tabla.rows[0].cells[0])
 
+    for i, (titulo, _) in enumerate(columnas):
+        celda = tabla.rows[0].cells[i + 1]
+        celda.text = titulo
+        aplicar_color_fondo(celda)
+
+    # Filas
     for _, fila in datos.iterrows():
         r = tabla.add_row().cells
         r[0].text = str(fila.get("NUM SESIÓN", ""))
 
-        for i, (c, _) in enumerate(columnas):
-            r[i + 1].text = valor_visible(fila.get(c))
-
+        for i, (_, col) in enumerate(columnas):
+            r[i + 1].text = valor_visible(fila.get(col))
 
 # =====================================================
 # FUNCIÓN PRINCIPAL
