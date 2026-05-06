@@ -8,6 +8,20 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+def buscar_columna(columna_objetivo, columnas_df):
+    """
+    Busca una columna real en el DataFrame usando coincidencia parcial.
+    """
+    objetivo = columna_objetivo.lower().replace("\xa0", " ").strip()
+
+    for col in columnas_df:
+        col_norm = str(col).lower().replace("\xa0", " ").strip()
+
+        if objetivo in col_norm:
+            return col
+
+    return None
+
 def aplicar_color_fondo(celda, color_hex="D9E1F2"):
     """
     Aplica color de fondo a una celda de tabla Word.
@@ -241,13 +255,13 @@ def agregar_otras_indicaciones(doc, datos):
         (
             "Cambios o progresos evidenciados",
             [
-                "Se evidencian cambios o progresos en relación a la práctica abordada? Indicar qué acciones lo evidencian",
+                "cambios o progresos",
             ],
         ),
         (
             "Dificultades identificadas",
             [
-                "Qué dificultades están limitando el avance de la(s) práctica(s) abordada(s)?",
+                "dificultades están limitando",
             ],
         ),
         (
@@ -272,16 +286,22 @@ def agregar_otras_indicaciones(doc, datos):
 
     # Ver si existe al menos un dato real
     existe_info = False
-    for _, posibles in columnas:
-        for col in posibles:
-            if col in datos.columns and datos[col].notna().any():
-                existe_info = True
-                break
-        if existe_info:
-            break
+    
+    for i, (_, posibles) in enumerate(columnas):
+    
+        valor = ""
+    
+        for col_ref in posibles:
+            col_real = buscar_columna(col_ref, datos.columns)
+    
+            if col_real:
+                texto = valor_visible(fila.get(col_real))
+                if texto:
+                    valor = texto
+                    break
+    
+        r[i + 1].text = valor
 
-    if not existe_info:
-        return
 
     doc.add_heading("OTRAS INDICACIONES", level=1)
 
