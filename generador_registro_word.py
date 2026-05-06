@@ -237,78 +237,56 @@ def agregar_eid_capacidades_practicas(doc, datos):
 
 def agregar_otras_indicaciones(doc, datos):
 
-    # Alias de columnas (Word -> posibles nombres en Excel)
     columnas = [
         (
             "Estrategia / acciones de acompañamiento realizadas",
-            [
-                "Estrategia /acciones de acompañamiento realizadas",
-            ],
+            ["estrategia"],
         ),
         (
             "Tema no planificado y cómo fue abordado",
-            [
-                "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red. ¿Cómo fue abordado?",
-                "Indique si surgió algún tema no planificado que impacta a la asesoría directa / trabajo en red.  ¿Cómo fue abordado?",
-            ],
+            ["tema no planificado"],
         ),
         (
             "Cambios o progresos evidenciados",
-            [
-                "cambios o progresos",
-            ],
+            ["cambios o progresos"],
         ),
         (
             "Dificultades identificadas",
-            [
-                "dificultades están limitando",
-            ],
+            ["dificultades"],
         ),
         (
             "Acuerdos concretos de la reunión",
-            [
-                "Acuerdos concretos de la reunión",
-            ],
+            ["acuerdos concretos"],
         ),
         (
             "Próximos pasos y responsables",
-            [
-                "Próximos pasos que se realizarán antes de la próxima sesión y responsables de cada acción",
-            ],
+            ["próximos pasos"],
         ),
         (
             "Comentarios u observaciones",
-            [
-                "Comentarios u observaciones",
-            ],
+            ["comentarios"],
         ),
     ]
 
-    # Ver si existe al menos un dato real
+    # Verificar si existe información
     existe_info = False
-    
-    for i, (_, posibles) in enumerate(columnas):
-    
-        valor = ""
-    
+    for _, posibles in columnas:
         for col_ref in posibles:
-            col_real = buscar_columna(col_ref, datos.columns)
-    
-            if col_real:
-                texto = valor_visible(fila.get(col_real))
-                if texto:
-                    valor = texto
-                    break
-    
-        r[i + 1].text = valor
+            if buscar_columna(col_ref, datos.columns):
+                existe_info = True
+                break
+        if existe_info:
+            break
 
+    if not existe_info:
+        return
 
     doc.add_heading("OTRAS INDICACIONES", level=1)
 
     tabla = doc.add_table(rows=1, cols=len(columnas) + 1)
     tabla.style = "Table Grid"
 
-    # Encabezados
+    # Encabezado
     tabla.rows[0].cells[0].text = "N° sesión"
     aplicar_color_fondo(tabla.rows[0].cells[0])
 
@@ -323,13 +301,18 @@ def agregar_otras_indicaciones(doc, datos):
         r[0].text = str(fila.get("NUM SESIÓN", ""))
 
         for i, (_, posibles) in enumerate(columnas):
-            valor = ""
-            for col in posibles:
-                if col in datos.columns:
-                    texto = valor_visible(fila.get(col))
+
+            valor = ""  # ✅ siempre inicializado
+
+            for col_ref in posibles:
+                col_real = buscar_columna(col_ref, datos.columns)
+
+                if col_real:
+                    texto = valor_visible(fila.get(col_real))
                     if texto:
                         valor = texto
                         break
+
             r[i + 1].text = valor
 
 # =====================================================
