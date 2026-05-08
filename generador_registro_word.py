@@ -12,7 +12,7 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
 
     dimension = None
 
-    # ✅ detectar dimensión correctamente
+    # 🔹 Detectar dimensión
     for col in columnas_df:
         if "dimensión asociada al eid seleccionado" in str(col).lower():
             texto = valor_visible(fila.get(col))
@@ -26,7 +26,7 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
     subdimension = ""
     estandar = ""
 
-    # ✅ buscar subdimensión correspondiente
+    # 🔹 1. Obtener subdimensión correcta
     for col in columnas_df:
         col_lower = str(col).lower()
 
@@ -36,15 +36,18 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
                 subdimension = texto
                 break
 
-    # ✅ buscar estándar correspondiente SOLO de esa dimensión
-    for col in columnas_df:
-        col_lower = str(col).lower()
+    # 🔹 2. Buscar estándar en base a la SUBDIMENSIÓN (no dimensión)
+    if subdimension:
+        sub_lower = subdimension.lower()
 
-        if "estándar asociado" in col_lower and dimension in col_lower:
-            texto = valor_visible(fila.get(col))
-            if texto:
-                estandar = texto
-                break
+        for col in columnas_df:
+            col_lower = str(col).lower()
+
+            if "estándar asociado" in col_lower and sub_lower in col_lower:
+                texto = valor_visible(fila.get(col))
+                if texto:
+                    estandar = texto
+                    break
 
     return subdimension, estandar
 
