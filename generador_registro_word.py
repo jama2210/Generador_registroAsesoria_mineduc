@@ -8,6 +8,47 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+def obtener_subdimension_y_estandar(fila, columnas_df):
+
+    dimension = None
+
+    # Detectar dimensión
+    for col in columnas_df:
+        if "dimensión asociada al eid seleccionado" in str(col).lower():
+            dimension = valor_visible(fila.get(col))
+            break
+
+    if not dimension:
+        return "", ""
+
+    dimension_lower = dimension.lower()
+
+    subdimension = ""
+    estandar = ""
+
+    # Buscar subdimensión correcta según dimensión
+    for col in columnas_df:
+        col_lower = str(col).lower()
+
+        if "sub dimensión" in col_lower and dimension_lower in col_lower:
+            texto = valor_visible(fila.get(col))
+            if texto:
+                subdimension = texto
+                break
+
+    # Buscar estándar real (primero que tenga contenido)
+    for col in columnas_df:
+        col_lower = str(col).lower()
+
+        if "estándar asociado" in col_lower:
+            texto = valor_visible(fila.get(col))
+            if texto:
+                estandar = texto
+                break
+
+    return subdimension, estandar
+
+
 def buscar_columna(columna_objetivo, columnas_df):
     """
     Busca una columna real en el DataFrame usando coincidencia parcial.
@@ -199,10 +240,8 @@ def agregar_eid_capacidades_practicas(doc, datos):
          "Capacidad abordada en la sesión de asesoría"),
         ("Dimensión asociada al EID seleccionado",
          "Dimensión asociada al EID seleccionado"),
-        ("Sub dimensión asociada a la dimensión de Liderazgo",
-         "Sub dimensión asociada a la dimensión de Liderazgo"),
-        ("Estándar asociado a la sub dimensión Planificación y Gestión de Resultados",
-         "Estándar asociado a la sub dimensión Planificación y Gestión de Resultados"),
+        ("Sub dimensión", None),
+        ("Estándar asociado a la sub dimensión", None),
         ("Práctica abordada",
          "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
         ("¿Se trabajó una segunda capacidad o estándar?",
@@ -229,9 +268,22 @@ def agregar_eid_capacidades_practicas(doc, datos):
 
     # Filas
     for _, fila in datos.iterrows():
+
         r = tabla.add_row().cells
+    
         for i, (_, col) in enumerate(columnas):
-            r[i].text = valor_visible(fila.get(col))
+    
+            # 👇 estos dos campos ahora son dinámicos
+            if "Sub dimensión asociada" in col:
+                sub, _ = obtener_subdimension_y_estandar(fila, datos.columns)
+                r[i].text = sub
+    
+            elif "Estándar asociado" in col:
+                _, est = obtener_subdimension_and_estandar(fila, datos.columns)
+                r[i].text = est
+    
+            else:
+                r[i].text = valor_visible(fila.get(col))
 
 
 
