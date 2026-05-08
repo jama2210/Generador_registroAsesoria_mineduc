@@ -230,7 +230,6 @@ def agregar_antecedentes_generales(doc, datos):
 
 
 def agregar_eid_capacidades_practicas(doc, datos):
-
     
     columnas = [
         ("N° de sesión", "NUM SESIÓN"),
@@ -240,7 +239,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
          "Capacidad abordada en la sesión de asesoría"),
         ("Dimensión asociada al EID seleccionado",
          "Dimensión asociada al EID seleccionado"),
-        ("Sub dimensión", None),
+        ("Sub dimensión asociada", None),
         ("Estándar asociado a la sub dimensión", None),
         ("Práctica abordada",
          "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado."),
@@ -279,7 +278,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
                 r[i].text = sub
     
             elif "Estándar asociado" in col:
-                _, est = obtener_subdimension_and_estandar(fila, datos.columns)
+                _, est = obtener_subdimension_y_estandar(fila, datos.columns)
                 r[i].text = est
     
             else:
