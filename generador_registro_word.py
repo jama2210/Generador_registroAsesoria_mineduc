@@ -8,6 +8,22 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+def buscar_valor_en_bloques(fila, columnas_df, texto_base):
+    """
+    Busca un valor en todas las variantes del campo (1,2,3,4...)
+    """
+
+    for col in columnas_df:
+        col_lower = str(col).lower()
+
+        if texto_base.lower() in col_lower:
+            valor = valor_visible(fila.get(col))
+
+            if valor:
+                return valor
+
+    return ""
+
 def obtener_subdimension_y_estandar(fila, columnas_df):
 
     dimension = None
@@ -268,19 +284,62 @@ def agregar_eid_capacidades_practicas(doc, datos):
 
         r = tabla.add_row().cells
 
-        # Obtener valores dinámicos UNA sola vez
-        subdimension, estandar = obtener_subdimension_y_estandar(fila, datos.columns)
+        # Obtener valores dinámicos una sola vez
+        subdimension, estandar = obtener_subdimension_y_estandar(
+            fila, datos.columns
+        )
 
         for i, (titulo, col) in enumerate(columnas):
 
+            # Subdimensión dinámica
             if titulo == "Sub dimensión":
-                r[i].text = subdimension
+                r[i].text = valor_visible(subdimension)
 
+            # Estándar dinámico
             elif titulo == "Estándar asociado a la sub dimensión":
-                r[i].text = estandar
+                r[i].text = valor_visible(estandar)
 
+            # Campos dinámicos complejos
+            elif col == "Capacidad abordada en la sesión de asesoría":
+                r[i].text = valor_visible(
+                    buscar_valor_en_bloques(
+                        fila,
+                        datos.columns,
+                        "Capacidad abordada en la sesión de asesoría"
+                    )
+                )
+
+            elif col == "Dimensión asociada al EID seleccionado":
+                r[i].text = valor_visible(
+                    buscar_valor_en_bloques(
+                        fila,
+                        datos.columns,
+                        "Dimensión asociada al EID seleccionado"
+                    )
+                )
+
+            elif "práctica se está abordando" in col:
+                r[i].text = valor_visible(
+                    buscar_valor_en_bloques(
+                        fila,
+                        datos.columns,
+                        "práctica se está abordando"
+                    )
+                )
+
+            elif "segunda capacidad o estándar" in col:
+                r[i].text = valor_visible(
+                    buscar_valor_en_bloques(
+                        fila,
+                        datos.columns,
+                        "segunda capacidad o estándar"
+                    )
+                )
+
+            # Otros campos normales
             else:
                 r[i].text = valor_visible(fila.get(col))
+
 
 def agregar_otras_indicaciones(doc, datos):
 
