@@ -12,7 +12,7 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
 
     dimension = None
 
-    # 🔹 Detectar dimensión
+    # 1. detectar dimensión
     for col in columnas_df:
         if "dimensión asociada al eid seleccionado" in str(col).lower():
             texto = valor_visible(fila.get(col))
@@ -26,7 +26,7 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
     subdimension = ""
     estandar = ""
 
-    # 🔹 1. Obtener subdimensión correcta
+    # 2. detectar subdimensión correcta
     for col in columnas_df:
         col_lower = str(col).lower()
 
@@ -36,21 +36,23 @@ def obtener_subdimension_y_estandar(fila, columnas_df):
                 subdimension = texto
                 break
 
-    # 🔹 2. Buscar estándar en base a la SUBDIMENSIÓN (no dimensión)
+    # 3. buscar estándar usando subdimensión en TODOS los bloques
     if subdimension:
         sub_lower = subdimension.lower()
 
         for col in columnas_df:
             col_lower = str(col).lower()
 
-            if "estándar asociado" in col_lower and sub_lower in col_lower:
+            if (
+                "estándar asociado" in col_lower
+                and sub_lower in col_lower
+            ):
                 texto = valor_visible(fila.get(col))
                 if texto:
                     estandar = texto
                     break
 
     return subdimension, estandar
-
 
 def buscar_columna(columna_objetivo, columnas_df):
     """
@@ -264,22 +266,20 @@ def agregar_eid_capacidades_practicas(doc, datos):
     # Filas
     for _, fila in datos.iterrows():
 
-        r = tabla.add_row().cells
+    r = tabla.add_row().cells
 
-        # 👇 obtener dinámicamente UNA VEZ
-        subdimension, estandar = obtener_subdimension_y_estandar(fila, datos.columns)
+    subdimension, estandar = obtener_subdimension_y_estandar(fila, datos.columns)
 
-        for i, (titulo, col) in enumerate(columnas):
+    for i, (titulo, col) in enumerate(columnas):
 
-            if titulo == "Sub dimensión":
-                r[i].text = subdimension
+        if titulo == "Sub dimensión":
+            r[i].text = subdimension
 
-            elif titulo == "Estándar asociado a la sub dimensión":
-                r[i].text = estandar
+        elif titulo == "Estándar asociado a la sub dimensión":
+            r[i].text = estandar
 
-            else:
-                r[i].text = valor_visible(fila.get(col))
-
+        else:
+            r[i].text = valor_visible(fila.get(col))
 
 
 def agregar_otras_indicaciones(doc, datos):
