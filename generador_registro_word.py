@@ -266,21 +266,21 @@ def agregar_eid_capacidades_practicas(doc, datos):
     # Filas
     for _, fila in datos.iterrows():
 
-    r = tabla.add_row().cells
+        r = tabla.add_row().cells
 
-    subdimension, estandar = obtener_subdimension_y_estandar(fila, datos.columns)
+        # Obtener valores dinámicos UNA sola vez
+        subdimension, estandar = obtener_subdimension_y_estandar(fila, datos.columns)
 
-    for i, (titulo, col) in enumerate(columnas):
+        for i, (titulo, col) in enumerate(columnas):
 
-        if titulo == "Sub dimensión":
-            r[i].text = subdimension
+            if titulo == "Sub dimensión":
+                r[i].text = subdimension
 
-        elif titulo == "Estándar asociado a la sub dimensión":
-            r[i].text = estandar
+            elif titulo == "Estándar asociado a la sub dimensión":
+                r[i].text = estandar
 
-        else:
-            r[i].text = valor_visible(fila.get(col))
-
+            else:
+                r[i].text = valor_visible(fila.get(col))
 
 def agregar_otras_indicaciones(doc, datos):
 
