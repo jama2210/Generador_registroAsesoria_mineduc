@@ -10,38 +10,69 @@ from docx.oxml import OxmlElement, ns
 
 def obtener_bloque_eid2(fila, columnas_df):
 
+    capacidad = ""
     dimension = ""
     subdimension = ""
     estandar = ""
     practica = ""
-    capacidad = ""
     segunda = ""
 
+    # ✅ detectar SI hay segunda capacidad
     for col in columnas_df:
         col_lower = str(col).lower()
 
-        # detectar campos 2
-        if "capacidad abordada en la sesión de asesoría2" in col_lower:
+        if "segunda capacidad o estándar en su sesión" in col_lower:
+            segunda = valor_visible(fila.get(col))
+            break
+
+    if not segunda or segunda.upper() != "SÍ":
+        return "", "", "", "", "", ""
+
+    # ✅ buscar capacidad 2
+    for col in columnas_df:
+        if "capacidad abordada en la sesión de asesoría2" in str(col).lower():
             capacidad = valor_visible(fila.get(col))
+            break
 
-        if "dimensión asociada al eid seleccionado2" in col_lower:
+    # ✅ detectar dimensión (2)
+    for col in columnas_df:
+        if "dimensión asociada al eid seleccionado2" in str(col).lower():
             dimension = valor_visible(fila.get(col))
+            break
 
-        if "sub dimensión" in col_lower and "2" in col_lower:
+    if not dimension:
+        return capacidad, "", "", "", "", segunda
+
+    dimension_lower = dimension.lower()
+
+    # ✅ buscar subdimensión correcta
+    for col in columnas_df:
+        col_lower = str(col).lower()
+
+        if "sub dimensión" in col_lower and "2" in col_lower and dimension_lower in col_lower:
             texto = valor_visible(fila.get(col))
             if texto:
                 subdimension = texto
+                break
 
-        if "estándar asociado" in col_lower and "2" in col_lower:
-            texto = valor_visible(fila.get(col))
-            if texto:
-                estandar = texto
+    # ✅ buscar estándar según subdimensión
+    if subdimension:
+        sub_lower = subdimension.lower()
 
-        if "práctica (2)" in col_lower:
+        for col in columnas_df:
+            col_lower = str(col).lower()
+
+            if "estándar asociado" in col_lower and "2" in col_lower and sub_lower in col_lower:
+                texto = valor_visible(fila.get(col))
+                if texto:
+                    estandar = texto
+                    break
+
+    # ✅ práctica (2)
+    for col in columnas_df:
+        if "práctica (2)" in str(col).lower():
             practica = valor_visible(fila.get(col))
-
-        if "segunda capacidad o estándar" in col_lower and "2" not in col_lower:
-            segunda = valor_visible(fila.get(col))
+            break
 
     return capacidad, dimension, subdimension, estandar, practica, segunda
 
