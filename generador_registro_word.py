@@ -406,13 +406,13 @@ def agregar_eid_capacidades_practicas(doc, datos):
             fila, datos.columns
         )
 
-        if segunda and segunda.upper() == "SÍ" and capacidad2:
+        if segunda and capacidad2 and "sí" in segunda.lower():
 
             doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (2)", level=1)
-
+        
             tabla2 = doc.add_table(rows=1, cols=7)
             tabla2.style = "Table Grid"
-
+        
             encabezados = [
                 "N° de sesión",
                 "Capacidad abordada",
@@ -422,16 +422,14 @@ def agregar_eid_capacidades_practicas(doc, datos):
                 "Práctica",
                 "¿Se trabajó segunda capacidad?"
             ]
-
-            # Encabezados
+        
             for i, h in enumerate(encabezados):
                 celda = tabla2.rows[0].cells[i]
                 celda.text = h
                 aplicar_color_fondo(celda)
-
-            # fila
+        
             r2 = tabla2.add_row().cells
-
+        
             r2[0].text = str(fila.get("NUM SESIÓN", ""))
             r2[1].text = capacidad2
             r2[2].text = dimension2
@@ -439,6 +437,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
             r2[4].text = est2
             r2[5].text = pract2
             r2[6].text = segunda
+
 
 def agregar_otras_indicaciones(doc, datos):
 
