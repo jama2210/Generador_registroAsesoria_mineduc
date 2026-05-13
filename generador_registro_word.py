@@ -8,6 +8,43 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+def obtener_bloque_eid2(fila, columnas_df):
+
+    dimension = ""
+    subdimension = ""
+    estandar = ""
+    practica = ""
+    capacidad = ""
+    segunda = ""
+
+    for col in columnas_df:
+        col_lower = str(col).lower()
+
+        # detectar campos 2
+        if "capacidad abordada en la sesión de asesoría2" in col_lower:
+            capacidad = valor_visible(fila.get(col))
+
+        if "dimensión asociada al eid seleccionado2" in col_lower:
+            dimension = valor_visible(fila.get(col))
+
+        if "sub dimensión" in col_lower and "2" in col_lower:
+            texto = valor_visible(fila.get(col))
+            if texto:
+                subdimension = texto
+
+        if "estándar asociado" in col_lower and "2" in col_lower:
+            texto = valor_visible(fila.get(col))
+            if texto:
+                estandar = texto
+
+        if "práctica (2)" in col_lower:
+            practica = valor_visible(fila.get(col))
+
+        if "segunda capacidad o estándar" in col_lower and "2" not in col_lower:
+            segunda = valor_visible(fila.get(col))
+
+    return capacidad, dimension, subdimension, estandar, practica, segunda
+
 def buscar_valor_en_bloques(fila, columnas_df, texto_base):
     """
     Busca un valor en todas las variantes del campo (1,2,3,4...)
@@ -268,6 +305,7 @@ def agregar_eid_capacidades_practicas(doc, datos):
          "¿Se trabajó una segunda capacidad o estándar en su sesión de asesoría?"),
     ]
 
+    # ✅ Título principal
     doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (1)", level=1)
 
     tabla = doc.add_table(rows=1, cols=len(columnas))
@@ -279,32 +317,28 @@ def agregar_eid_capacidades_practicas(doc, datos):
         celda.text = titulo
         aplicar_color_fondo(celda)
 
-    # Filas
+    # 🔥 TRABAJAR POR FILA (UN SOLO LOOP)
     for _, fila in datos.iterrows():
 
         r = tabla.add_row().cells
 
-        # Obtener valores dinámicos una sola vez
+        # obtener dinámicos EID 1
         subdimension, estandar = obtener_subdimension_y_estandar(
             fila, datos.columns
         )
 
         for i, (titulo, col) in enumerate(columnas):
 
-            # Subdimensión dinámica
             if titulo == "Sub dimensión":
                 r[i].text = valor_visible(subdimension)
 
-            # Estándar dinámico
             elif titulo == "Estándar asociado a la sub dimensión":
                 r[i].text = valor_visible(estandar)
 
-            # Campos dinámicos complejos
             elif col == "Capacidad abordada en la sesión de asesoría":
                 r[i].text = valor_visible(
                     buscar_valor_en_bloques(
-                        fila,
-                        datos.columns,
+                        fila, datos.columns,
                         "Capacidad abordada en la sesión de asesoría"
                     )
                 )
@@ -312,34 +346,68 @@ def agregar_eid_capacidades_practicas(doc, datos):
             elif col == "Dimensión asociada al EID seleccionado":
                 r[i].text = valor_visible(
                     buscar_valor_en_bloques(
-                        fila,
-                        datos.columns,
+                        fila, datos.columns,
                         "Dimensión asociada al EID seleccionado"
                     )
                 )
 
-            elif "práctica se está abordando" in col:
+            elif "práctica" in str(col).lower():
                 r[i].text = valor_visible(
                     buscar_valor_en_bloques(
-                        fila,
-                        datos.columns,
+                        fila, datos.columns,
                         "práctica se está abordando"
                     )
                 )
 
-            elif "segunda capacidad o estándar" in col:
+            elif "segunda capacidad" in str(col).lower():
                 r[i].text = valor_visible(
                     buscar_valor_en_bloques(
-                        fila,
-                        datos.columns,
+                        fila, datos.columns,
                         "segunda capacidad o estándar"
                     )
                 )
 
-            # Otros campos normales
             else:
                 r[i].text = valor_visible(fila.get(col))
 
+        # 🔥 MANEJO DE EID 2 EN MISMO LOOP
+        capacidad2, dimension2, sub2, est2, pract2, segunda = obtener_bloque_eid2(
+            fila, datos.columns
+        )
+
+        if segunda and segunda.upper() == "SÍ" and capacidad2:
+
+            doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (2)", level=1)
+
+            tabla2 = doc.add_table(rows=1, cols=7)
+            tabla2.style = "Table Grid"
+
+            encabezados = [
+                "N° de sesión",
+                "Capacidad abordada",
+                "Dimensión",
+                "Sub dimensión",
+                "Estándar",
+                "Práctica",
+                "¿Se trabajó segunda capacidad?"
+            ]
+
+            # Encabezados
+            for i, h in enumerate(encabezados):
+                celda = tabla2.rows[0].cells[i]
+                celda.text = h
+                aplicar_color_fondo(celda)
+
+            # fila
+            r2 = tabla2.add_row().cells
+
+            r2[0].text = str(fila.get("NUM SESIÓN", ""))
+            r2[1].text = capacidad2
+            r2[2].text = dimension2
+            r2[3].text = sub2
+            r2[4].text = est2
+            r2[5].text = pract2
+            r2[6].text = segunda
 
 def agregar_otras_indicaciones(doc, datos):
 
