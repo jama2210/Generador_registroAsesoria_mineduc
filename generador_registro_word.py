@@ -8,74 +8,85 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from docx.oxml import OxmlElement, ns
 
+def normalizar(texto):
+    if texto is None:
+        return ""
+
+    return (
+        str(texto)
+        .replace("\xa0", " ")
+        .replace("\n", " ")
+        .strip()
+    )
+
+COLUMNAS_EID = {
+
+    # =========================
+    # BLOQUE 1
+    # =========================
+    1: {
+        "eid": "Estándares Indicativos de Desempeño asociado",
+        "capacidad": "Capacidad abordada en la sesión de asesoría",
+        "dimension": "Dimensión asociada al EID seleccionado",
+        "practica": "Indique qué práctica se está abordando en el establecimiento a partir del EID trabajado.",
+        "segunda": "¿Se trabajó una segunda capacidad o estándar en su sesión de asesoría?",
+    },
+
+    # =========================
+    # BLOQUE 2
+    # =========================
+    2: {
+        "capacidad": "Capacidad (2) abordada en la sesión de asesoría",
+        "dimension": "Dimensión asociada al EID seleccionado2",
+        "practica": "Indique qué práctica (2) se está abordando en el establecimiento a partir del EID trabajado.",
+    },
+
+}
+
 def obtener_bloque_eid2(fila, columnas_df):
 
-    capacidad = ""
-    dimension = ""
-    subdimension = ""
-    estandar = ""
-    practica = ""
-    segunda = ""
+    segunda = valor_visible(
+        fila.get(
+            COLUMNAS_EID[1]["segunda"]
+        )
+    )
 
-    # ✅ detectar SI hay segunda capacidad
-    for col in columnas_df:
-        col_lower = str(col).lower()
+    if normalizar(segunda).upper() != "SÍ":
+        return None
 
-        if "segunda capacidad o estándar en su sesión" in col_lower:
-            segunda = valor_visible(fila.get(col))
-            break
+    capacidad = valor_visible(
+        fila.get(
+            COLUMNAS_EID[2]["capacidad"]
+        )
+    )
 
-    if not segunda or segunda.upper() != "SÍ":
-        return "", "", "", "", "", ""
+    dimension = valor_visible(
+        fila.get(
+            COLUMNAS_EID[2]["dimension"]
+        )
+    )
 
-    # ✅ buscar capacidad 2
-    for col in columnas_df:
-        if "capacidad abordada en la sesión de asesoría2" in str(col).lower():
-            capacidad = valor_visible(fila.get(col))
-            break
+    practica = valor_visible(
+        fila.get(
+            COLUMNAS_EID[2]["practica"]
+        )
+    )
 
-    # ✅ detectar dimensión (2)
-    for col in columnas_df:
-        if "dimensión asociada al eid seleccionado2" in str(col).lower():
-            dimension = valor_visible(fila.get(col))
-            break
+    subdimension, estandar = obtener_subdimension_y_estandar(
+        fila,
+        columnas_df,
+        bloque=2
+    )
 
-    if not dimension:
-        return capacidad, "", "", "", "", segunda
-
-    dimension_lower = dimension.lower()
-
-    # ✅ buscar subdimensión correcta
-    for col in columnas_df:
-        col_lower = str(col).lower()
-
-        if "sub dimensión" in col_lower and "2" in col_lower and dimension_lower in col_lower:
-            texto = valor_visible(fila.get(col))
-            if texto:
-                subdimension = texto
-                break
-
-    # ✅ buscar estándar según subdimensión
-    if subdimension:
-        sub_lower = subdimension.lower()
-
-        for col in columnas_df:
-            col_lower = str(col).lower()
-
-            if "estándar asociado" in col_lower and "2" in col_lower and sub_lower in col_lower:
-                texto = valor_visible(fila.get(col))
-                if texto:
-                    estandar = texto
-                    break
-
-    # ✅ práctica (2)
-    for col in columnas_df:
-        if "práctica (2)" in str(col).lower():
-            practica = valor_visible(fila.get(col))
-            break
-
-    return capacidad, dimension, subdimension, estandar, practica, segunda
-
+    return {
+        "capacidad": capacidad,
+        "dimension": dimension,
+        "subdimension": subdimension,
+        "estandar": estandar,
+        "practica": practica,
+        "segunda": segunda,
+    }
+    
 def buscar_valor_en_bloques(fila, columnas_df, texto_base):
     """
     Busca un valor en todas las variantes del campo (1,2,3,4...)
@@ -92,49 +103,85 @@ def buscar_valor_en_bloques(fila, columnas_df, texto_base):
 
     return ""
 
-def obtener_subdimension_y_estandar(fila, columnas_df):
-
-    dimension = None
-
-    # 1. detectar dimensión
-    for col in columnas_df:
-        if "dimensión asociada al eid seleccionado" in str(col).lower():
-            texto = valor_visible(fila.get(col))
-            if texto:
-                dimension = texto.lower()
-                break
-
-    if not dimension:
-        return "", ""
+def obtener_subdimension_y_estandar(fila, columnas_df, bloque=1):
 
     subdimension = ""
     estandar = ""
 
-    # 2. detectar subdimensión correcta
+    # =========================
+    # DIMENSIÓN
+    # =========================
+    col_dimension = COLUMNAS_EID[bloque]["dimension"]
+
+    dimension = valor_visible(fila.get(col_dimension))
+
+    if not dimension:
+        return "", ""
+
+    dimension_lower = normalizar(dimension).lower()
+
+    # =========================
+    # SUBDIMENSIÓN
+    # =========================
     for col in columnas_df:
-        col_lower = str(col).lower()
 
-        if "sub dimensión" in col_lower and dimension in col_lower:
-            texto = valor_visible(fila.get(col))
-            if texto:
-                subdimension = texto
-                break
+        col_lower = normalizar(col).lower()
 
-    # 3. buscar estándar usando subdimensión en TODOS los bloques
+        if (
+            "sub dimensión" in col_lower
+            and dimension_lower in col_lower
+        ):
+
+            # bloque 1 = sin número
+            if bloque == 1 and not col_lower.endswith("2"):
+                valor = valor_visible(fila.get(col))
+
+                if valor:
+                    subdimension = valor
+                    break
+
+            # bloque 2 = columnas terminadas en 2
+            elif bloque == 2 and col_lower.endswith("2"):
+
+                valor = valor_visible(fila.get(col))
+
+                if valor:
+                    subdimension = valor
+                    break
+
+    # =========================
+    # ESTÁNDAR
+    # =========================
     if subdimension:
-        sub_lower = subdimension.lower()
+
+        sub_lower = normalizar(subdimension).lower()
 
         for col in columnas_df:
-            col_lower = str(col).lower()
+
+            col_lower = normalizar(col).lower()
 
             if (
                 "estándar asociado" in col_lower
                 and sub_lower in col_lower
             ):
-                texto = valor_visible(fila.get(col))
-                if texto:
-                    estandar = texto
-                    break
+
+                # bloque 1
+                if bloque == 1 and not col_lower.endswith("2"):
+
+                    valor = valor_visible(fila.get(col))
+
+                    if valor:
+                        estandar = valor
+                        break
+
+                # bloque 2
+                elif bloque == 2 and col_lower.endswith("2"):
+
+                    valor = valor_visible(fila.get(col))
+
+                    if valor:
+                        estandar = valor
+                        break
 
     return subdimension, estandar
 
@@ -336,24 +383,22 @@ def agregar_eid_capacidades_practicas(doc, datos):
          "¿Se trabajó una segunda capacidad o estándar en su sesión de asesoría?"),
     ]
 
-    # ✅ Título principal
+    # ✅ EID 1
     doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (1)", level=1)
 
     tabla = doc.add_table(rows=1, cols=len(columnas))
     tabla.style = "Table Grid"
 
-    # Encabezados
     for i, (titulo, _) in enumerate(columnas):
-        celda = tabla.rows[0].cells[i]
-        celda.text = titulo
-        aplicar_color_fondo(celda)
+        c = tabla.rows[0].cells[i]
+        c.text = titulo
+        aplicar_color_fondo(c)
 
-    # 🔥 TRABAJAR POR FILA (UN SOLO LOOP)
+    # ✅ recorrer filas UNA sola vez
     for _, fila in datos.iterrows():
 
         r = tabla.add_row().cells
 
-        # obtener dinámicos EID 1
         subdimension, estandar = obtener_subdimension_y_estandar(
             fila, datos.columns
         )
@@ -401,43 +446,40 @@ def agregar_eid_capacidades_practicas(doc, datos):
             else:
                 r[i].text = valor_visible(fila.get(col))
 
-        # 🔥 MANEJO DE EID 2 EN MISMO LOOP
-        capacidad2, dimension2, sub2, est2, pract2, segunda = obtener_bloque_eid2(
-            fila, datos.columns
-        )
+        # ✅ AHORA -> EID 2 EN MISMO LOOP (CORRECTO)
+        bloque2 = obtener_bloque_eid2(fila, datos.columns)
 
-        if segunda and capacidad2 and "sí" in segunda.lower():
+        if bloque2:   # ✅ si existe, lo mostramos
 
             doc.add_heading("EID, CAPACIDADES Y PRÁCTICAS ABORDADAS (2)", level=1)
-        
+
             tabla2 = doc.add_table(rows=1, cols=7)
             tabla2.style = "Table Grid"
-        
-            encabezados = [
+
+            headers2 = [
                 "N° de sesión",
                 "Capacidad abordada",
                 "Dimensión",
                 "Sub dimensión",
                 "Estándar",
                 "Práctica",
-                "¿Se trabajó segunda capacidad?"
+                "¿Segunda capacidad?"
             ]
-        
-            for i, h in enumerate(encabezados):
-                celda = tabla2.rows[0].cells[i]
-                celda.text = h
-                aplicar_color_fondo(celda)
-        
-            r2 = tabla2.add_row().cells
-        
-            r2[0].text = str(fila.get("NUM SESIÓN", ""))
-            r2[1].text = capacidad2
-            r2[2].text = dimension2
-            r2[3].text = sub2
-            r2[4].text = est2
-            r2[5].text = pract2
-            r2[6].text = segunda
 
+            for j, h in enumerate(headers2):
+                c = tabla2.rows[0].cells[j]
+                c.text = h
+                aplicar_color_fondo(c)
+
+            r2 = tabla2.add_row().cells
+
+            r2[0].text = valor_visible(fila.get("NUM SESIÓN"))
+            r2[1].text = bloque2["capacidad"]
+            r2[2].text = bloque2["dimension"]
+            r2[3].text = bloque2["subdimension"]
+            r2[4].text = bloque2["estandar"]
+            r2[5].text = bloque2["practica"]
+            r2[6].text = bloque2["segunda"]
 
 def agregar_otras_indicaciones(doc, datos):
 
